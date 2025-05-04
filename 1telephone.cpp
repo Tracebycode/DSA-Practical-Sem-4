@@ -1,137 +1,169 @@
-// Consider telephone book database of N clients. Make use of a hash table implementation
-// to quickly look up client‘s telephone number. Make use of two collision handling
-// techniques and compare them using number of comparisons required to find a set of
-// telephone numbers. Use linear probing and quadratic probing as collision handling
-// techniques.
-
-
-
 #include <iostream>
+#include <string>
 using namespace std;
 
-#define TABLE_SIZE 10
+const int SIZE = 10; // Hash table size (can adjust as needed)
 
-class HashTable {
+class HashEntry {
 public:
-    int table[TABLE_SIZE];
-    int comparisons;
+    long long telephone;
+    string name;
+    bool isOccupied;
 
-    void initialize() {
-        for (int i = 0; i < TABLE_SIZE; i++)
-            table[i] = -1;
-        comparisons = 0;
-    }
-
-    void insertLinear(int key) {
-        int index = key % TABLE_SIZE;
-        for (int i = 0; i < TABLE_SIZE; i++) {
-            int probe = (index + i) % TABLE_SIZE;
-            if (table[probe] == -1) {
-                table[probe] = key;
-                return;
-            }
-        }
-        cout << "Hash table is full (Linear Probing)\n";
-    }
-
-    void insertQuadratic(int key) {
-        int index = key % TABLE_SIZE;
-        for (int i = 0; i < TABLE_SIZE; i++) {
-            int probe = (index + i * i) % TABLE_SIZE;
-            if (table[probe] == -1) {
-                table[probe] = key;
-                return;
-            }
-        }
-        cout << "Hash table is full (Quadratic Probing)\n";
-    }
-
-    bool searchLinear(int key) {
-        comparisons = 0;
-        int index = key % TABLE_SIZE;
-        for (int i = 0; i < TABLE_SIZE; i++) {
-            int probe = (index + i) % TABLE_SIZE;
-            comparisons++;
-            if (table[probe] == key)
-                return true;
-            if (table[probe] == -1)
-                return false;
-        }
-        return false;
-    }
-
-    bool searchQuadratic(int key) {
-        comparisons = 0;
-        int index = key % TABLE_SIZE;
-        for (int i = 0; i < TABLE_SIZE; i++) {
-            int probe = (index + i * i) % TABLE_SIZE;
-            comparisons++;
-            if (table[probe] == key)
-                return true;
-            if (table[probe] == -1)
-                return false;
-        }
-        return false;
-    }
-
-    void display() {
-        cout << "Hash Table: ";
-        for (int i = 0; i < TABLE_SIZE; i++) {
-            if (table[i] == -1)
-                cout << "- ";
-            else
-                cout << table[i] << " ";
-        }
-        cout << endl;
+    HashEntry() {
+        telephone = 0;
+        name = "";
+        isOccupied = false;
     }
 };
 
+class HashTableLinear {
+    HashEntry table[SIZE];
+
+public:
+    int insert(string name, long long tele) {
+        int key = tele % SIZE;
+        int comparisons = 1;
+
+        for (int i = 0; i < SIZE; i++) {
+            int idx = (key + i) % SIZE;
+            if (!table[idx].isOccupied) {
+                table[idx].telephone = tele;
+                table[idx].name = name;
+                table[idx].isOccupied = true;
+                return comparisons;
+            }
+            comparisons++;
+        }
+        cout << "Hash table (Linear) is full.\n";
+        return comparisons;
+    }
+
+    int search(long long tele) {
+        int key = tele % SIZE;
+        int comparisons = 1;
+
+        for (int i = 0; i < SIZE; i++) {
+            int idx = (key + i) % SIZE;
+
+            if (!table[idx].isOccupied)
+                return comparisons;
+
+            if (table[idx].telephone == tele) {
+                cout << "[Linear] Found: " << table[idx].name << " - " << table[idx].telephone << endl;
+                return comparisons;
+            }
+            comparisons++;
+        }
+
+        cout << "[Linear] Telephone not found.\n";
+        return comparisons;
+    }
+};
+
+class HashTableQuadratic {
+    HashEntry table[SIZE];
+
+public:
+    int insert(string name, long long tele) {
+        int key = tele % SIZE;
+        int comparisons = 1;
+
+        for (int i = 0; i < SIZE; i++) {
+            int idx = (key + i * i) % SIZE;
+
+            if (!table[idx].isOccupied) {
+                table[idx].telephone = tele;
+                table[idx].name = name;
+                table[idx].isOccupied = true;
+                return comparisons;
+            }
+            comparisons++;
+        }
+        cout << "Hash table (Quadratic) is full.\n";
+        return comparisons;
+    }
+
+    int search(long long tele) {
+        int key = tele % SIZE;
+        int comparisons = 1;
+
+        for (int i = 0; i < SIZE; i++) {
+            int idx = (key + i * i) % SIZE;
+
+            if (!table[idx].isOccupied)
+                return comparisons;
+
+            if (table[idx].telephone == tele) {
+                cout << "[Quadratic] Found: " << table[idx].name << " - " << table[idx].telephone << endl;
+                return comparisons;
+            }
+            comparisons++;
+        }
+
+        cout << "[Quadratic] Telephone not found.\n";
+        return comparisons;
+    }
+};
+
+// --------- Main Program ------------
 int main() {
-    HashTable linearHT, quadraticHT;
-    int key, n;
-    cout << "Enter number of clients (max 10): ";
-    cin >> n;
+    HashTableLinear linear;
+    HashTableQuadratic quadratic;
 
-    if (n > 10) {
-        cout << "Please enter 10 or fewer clients.\n";
-        return 0;
-    }
+    int choice;
+    string name;
+    long long tele;
 
-    int phoneNumbers[10];
-    cout << "Enter telephone numbers:\n";
-    for (int i = 0; i < n; i++) {
-        cout << "Client " << i + 1 << ": ";
-        cin >> phoneNumbers[i];
-    }
+    while (true) {
+        cout << "\n---- Telephone Book ----\n";
+        cout << "1. Insert Record\n";
+        cout << "2. Search Record\n";
+        cout << "3. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
 
-    // Linear Probing Insertion
-    linearHT.initialize();
-    for (int i = 0; i < n; i++)
-        linearHT.insertLinear(phoneNumbers[i]);
+        switch (choice) {
+        case 1:
+            cout << "Enter name: ";
+            cin >> name;
+            cout << "Enter 10-digit telephone number: ";
+            cin >> tele;
 
-    // Quadratic Probing Insertion
-    quadraticHT.initialize();
-    for (int i = 0; i < n; i++)
-        quadraticHT.insertQuadratic(phoneNumbers[i]);
+            if (tele < 1000000000 || tele > 9999999999) {
+                cout << "Invalid telephone number.\n";
+                break;
+            }
 
-    // Display Hash Tables
-    cout << "\nLinear Probing Hash Table:\n";
-    linearHT.display();
-    cout << "Quadratic Probing Hash Table:\n";
-    quadraticHT.display();
+            linear.insert(name, tele);
+            quadratic.insert(name, tele);
+            cout << "Record inserted in both tables.\n";
+            break;
 
-    // Search and compare
-    cout << "\n--- Search and Comparison ---\n";
-    for (int i = 0; i < n; i++) {
-        linearHT.searchLinear(phoneNumbers[i]);
-        int linearComp = linearHT.comparisons;
+        case 2:
+            cout << "Enter telephone number to search: ";
+            cin >> tele;
 
-        quadraticHT.searchQuadratic(phoneNumbers[i]);
-        int quadComp = quadraticHT.comparisons;
+            if (tele < 1000000000 || tele > 9999999999) {
+                cout << "Invalid telephone number.\n";
+                break;
+            }
 
-        cout << "Searching for " << phoneNumbers[i] << ":\n";
-        cout << "  Linear Probing Comparisons: " << linearComp << "\n";
-        cout << "  Quadratic Probing Comparisons: " << quadComp << "\n";
+            int compLinear, compQuadratic;
+            compLinear = linear.search(tele);
+            compQuadratic = quadratic.search(tele);
+
+            cout << "Comparisons in Linear Probing: " << compLinear << endl;
+            cout << "Comparisons in Quadratic Probing: " << compQuadratic << endl;
+            break;
+
+        case 3:
+            cout << "Exiting...\n";
+            return 0;
+
+        default:
+            cout << "Invalid choice!\n";
+        }
     }
 
     return 0;
